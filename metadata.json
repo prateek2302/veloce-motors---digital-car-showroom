@@ -1,0 +1,6 @@
+{
+  "name": "Veloce Motors — Digital Car Showroom",
+  "description": "Architectural luxury car showroom featuring live vehicle inventory, pricing configurator, interactive 3D and cabin virtual tours, secure user authentication, and vehicle reservation checkout.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

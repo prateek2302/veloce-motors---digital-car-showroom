@@ -1,0 +1,194 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Schema Validators
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'phone', 'preferredShowroom', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'phone', 'preferredShowroom', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.phone is string && data.phone.size() >= 0 && data.phone.size() <= 32
+        && data.preferredShowroom is string && data.preferredShowroom.size() >= 1 && data.preferredShowroom.size() <= 80
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidReservation(data) {
+      return data.keys().hasAll([
+          'userId', 'customerName', 'customerEmail', 'customerPhone',
+          'vehicleId', 'vehicleName', 'trimName', 'exteriorColor',
+          'interiorFinish', 'wheelPackage', 'vehiclePrice', 'depositAmount',
+          'paymentMethod', 'cardLast4', 'transactionRef', 'paymentStatus',
+          'reservationStatus', 'showroomLocation', 'deliveryWindow',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'customerName', 'customerEmail', 'customerPhone',
+          'vehicleId', 'vehicleName', 'trimName', 'exteriorColor',
+          'interiorFinish', 'wheelPackage', 'vehiclePrice', 'depositAmount',
+          'paymentMethod', 'cardLast4', 'transactionRef', 'paymentStatus',
+          'reservationStatus', 'showroomLocation', 'deliveryWindow',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100
+        && data.customerEmail is string && data.customerEmail.size() >= 3 && data.customerEmail.size() <= 160
+        && data.customerPhone is string && data.customerPhone.size() >= 6 && data.customerPhone.size() <= 32
+        && isValidId(data.vehicleId) && data.vehicleId.size() <= 64
+        && data.vehicleName is string && data.vehicleName.size() >= 2 && data.vehicleName.size() <= 120
+        && data.trimName is string && data.trimName.size() >= 2 && data.trimName.size() <= 80
+        && data.exteriorColor is string && data.exteriorColor.size() >= 2 && data.exteriorColor.size() <= 60
+        && data.interiorFinish is string && data.interiorFinish.size() >= 2 && data.interiorFinish.size() <= 60
+        && data.wheelPackage is string && data.wheelPackage.size() >= 2 && data.wheelPackage.size() <= 80
+        && data.vehiclePrice is number && data.vehiclePrice >= 10000 && data.vehiclePrice <= 2000000
+        && data.depositAmount is number && data.depositAmount >= 500 && data.depositAmount <= 100000
+        && data.paymentMethod in ['card', 'wire', 'apple_pay']
+        && data.cardLast4 is string && data.cardLast4.size() == 4
+        && isValidId(data.transactionRef) && data.transactionRef.size() >= 6 && data.transactionRef.size() <= 64
+        && data.paymentStatus in ['paid', 'refunded']
+        && data.reservationStatus in ['confirmed', 'cancelled']
+        && data.showroomLocation is string && data.showroomLocation.size() >= 2 && data.showroomLocation.size() <= 80
+        && data.deliveryWindow is string && data.deliveryWindow.size() >= 2 && data.deliveryWindow.size() <= 60
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidTourBooking(data) {
+      return data.keys().hasAll([
+          'userId', 'vehicleId', 'vehicleName', 'tourType',
+          'showroomLocation', 'preferredDate', 'preferredTime',
+          'notes', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'userId', 'vehicleId', 'vehicleName', 'tourType',
+          'showroomLocation', 'preferredDate', 'preferredTime',
+          'notes', 'status', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.userId)
+        && data.userId == request.auth.uid
+        && isValidId(data.vehicleId) && data.vehicleId.size() <= 64
+        && data.vehicleName is string && data.vehicleName.size() >= 2 && data.vehicleName.size() <= 120
+        && data.tourType in ['virtual_live', 'showroom_visit']
+        && data.showroomLocation is string && data.showroomLocation.size() >= 2 && data.showroomLocation.size() <= 80
+        && data.preferredDate is string && data.preferredDate.size() >= 4 && data.preferredDate.size() <= 32
+        && data.preferredTime is string && data.preferredTime.size() >= 2 && data.preferredTime.size() <= 24
+        && data.notes is string && data.notes.size() >= 0 && data.notes.size() <= 400
+        && data.status in ['scheduled', 'cancelled']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // 1. User Profiles (PII strictly owner-only)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwner(userId);
+      allow list: if false;
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'phone', 'preferredShowroom', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // 2. Vehicle Reservations & Payment Records
+    match /reservations/{reservationId} {
+      allow get: if isValidId(reservationId) && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(reservationId)
+        && isValidReservation(incoming())
+        && incoming().reservationStatus == 'confirmed'
+        && incoming().paymentStatus == 'paid'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(reservationId)
+        && isValidReservation(incoming())
+        && isOwner(existing().userId)
+        && existing().reservationStatus != 'cancelled'
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (
+            incoming().reservationStatus == 'cancelled'
+            && incoming().paymentStatus == 'refunded'
+            && incoming().diff(existing()).affectedKeys().hasOnly(['reservationStatus', 'paymentStatus', 'updatedAt'])
+          )
+          ||
+          (
+            incoming().reservationStatus == existing().reservationStatus
+            && incoming().paymentStatus == existing().paymentStatus
+            && incoming().diff(existing()).affectedKeys().hasOnly(['deliveryWindow', 'showroomLocation', 'updatedAt'])
+          )
+        );
+      allow delete: if false;
+    }
+
+    // 3. Private Virtual & Showroom Tour Appointments
+    match /tourBookings/{bookingId} {
+      allow get: if isValidId(bookingId) && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isVerifiedUser()
+        && isValidId(bookingId)
+        && isValidTourBooking(incoming())
+        && incoming().status == 'scheduled'
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser()
+        && isValidId(bookingId)
+        && isValidTourBooking(incoming())
+        && isOwner(existing().userId)
+        && existing().status != 'cancelled'
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().status == 'cancelled'
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if false;
+    }
+  }
+}

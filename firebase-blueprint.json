@@ -1,0 +1,264 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Private authenticated customer profile for Veloce Motors showroom accounts.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 32
+        },
+        "preferredShowroom": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "displayName", "email", "phone", "preferredShowroom", "createdAt", "updatedAt"]
+    },
+    "Reservation": {
+      "title": "Vehicle Reservation",
+      "description": "Confirmed vehicle configuration reservation and deposit payment authorization record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "customerEmail": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "customerPhone": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 32
+        },
+        "vehicleId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "vehicleName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "trimName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "exteriorColor": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "interiorFinish": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "wheelPackage": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "vehiclePrice": {
+          "type": "number"
+        },
+        "depositAmount": {
+          "type": "number"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["card", "wire", "apple_pay"]
+        },
+        "cardLast4": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4
+        },
+        "transactionRef": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["paid", "refunded"]
+        },
+        "reservationStatus": {
+          "type": "string",
+          "enum": ["confirmed", "cancelled"]
+        },
+        "showroomLocation": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "deliveryWindow": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "customerName",
+        "customerEmail",
+        "customerPhone",
+        "vehicleId",
+        "vehicleName",
+        "trimName",
+        "exteriorColor",
+        "interiorFinish",
+        "wheelPackage",
+        "vehiclePrice",
+        "depositAmount",
+        "paymentMethod",
+        "cardLast4",
+        "transactionRef",
+        "paymentStatus",
+        "reservationStatus",
+        "showroomLocation",
+        "deliveryWindow",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TourBooking": {
+      "title": "Virtual or Showroom Tour Booking",
+      "description": "Scheduled private concierge virtual walkaround or physical showroom test drive.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "vehicleId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "vehicleName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "tourType": {
+          "type": "string",
+          "enum": ["virtual_live", "showroom_visit"]
+        },
+        "showroomLocation": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "preferredDate": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 32
+        },
+        "preferredTime": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 24
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 400
+        },
+        "status": {
+          "type": "string",
+          "enum": ["scheduled", "cancelled"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "vehicleId",
+        "vehicleName",
+        "tourType",
+        "showroomLocation",
+        "preferredDate",
+        "preferredTime",
+        "notes",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private customer profile documents keyed by Firebase Auth UID."
+    },
+    "/reservations/{reservationId}": {
+      "schema": { "$ref": "#/entities/Reservation" },
+      "description": "Customer vehicle reservation and deposit authorization records."
+    },
+    "/tourBookings/{bookingId}": {
+      "schema": { "$ref": "#/entities/TourBooking" },
+      "description": "Scheduled private virtual walkarounds and showroom test drive appointments."
+    }
+  }
+}
